@@ -2,16 +2,14 @@
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   background: #f6f6f6;
 }
 
-/* アプリ全体：スマホ幅想定 */
+/* スマホ幅想定 */
 .app {
   max-width: 520px;
   margin: 0 auto;
@@ -26,10 +24,7 @@ body {
   margin: 8px 4px 12px;
 }
 
-.title {
-  font-weight: 900;
-  font-size: 20px;
-}
+.title { font-weight: 900; font-size: 20px; }
 
 .progress {
   font-weight: 800;
@@ -48,25 +43,17 @@ body {
 
   display: flex;
   flex-direction: column;
-
-  /* ★ ここ重要：常に縦方向は中央寄せ */
-  justify-content: center;
-
   gap: 14px;
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
-/* ======================
-   START画面
-====================== */
+/* START */
 .startTitle {
   font-weight: 900;
   font-size: 42px;
   text-align: center;
-  margin-bottom: 40px;
+  margin-top: 10vh;
 }
 
 .startBtn {
@@ -80,54 +67,53 @@ body {
   color: #fff;
   cursor: pointer;
 }
+.startBtn:active { transform: scale(0.99); }
 
-.startBtn:active {
-  transform: scale(0.99);
+/* QUIZ：中央に寄せる本体 */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;  /* ★常に縦中央 */
+  gap: 14px;
 }
 
-/* ======================
-   クイズ表示
-====================== */
-
-/* 数字・式（JSで自動拡大される前提） */
+/* 数字・式（JSで最終的に最大化） */
 .equation {
   font-weight: 1000;
   text-align: center;
   letter-spacing: 1px;
   line-height: 1.05;
 
-  /* 初期値：JSが最終調整 */
-  font-size: clamp(48px, 16vw, 140px);
-
+  font-size: clamp(56px, 18vw, 180px); /* ★初期値も強め */
   white-space: nowrap;
   overflow: hidden;
 }
 
-/* 読み（ひらがな） */
+/* 読み */
 .reading {
-  font-size: clamp(22px, 7vw, 40px);
+  font-size: clamp(24px, 7.5vw, 44px);
   font-weight: 900;
   text-align: center;
 }
 
-/* 正解の〇 */
+/* 正解の〇（赤く大きく） */
 .maru {
   text-align: center;
   font-weight: 1000;
-  font-size: clamp(64px, 18vw, 160px);
-  color: #e60000; /* 赤 */
+  font-size: clamp(80px, 22vw, 200px);
+  color: #e60000;
   line-height: 1;
-  margin-top: -4px;
+  margin-top: -6px;
 }
 
-/* メッセージ（ほんと？など） */
+/* メッセージ */
 .message {
   text-align: center;
   font-weight: 900;
-  font-size: clamp(22px, 7vw, 34px);
+  font-size: clamp(22px, 7vw, 36px);
   min-height: 40px;
 }
-
 .message small {
   display: block;
   font-size: 16px;
@@ -144,7 +130,7 @@ body {
 }
 
 .choiceBtn {
-  font-size: clamp(26px, 8vw, 44px);
+  font-size: clamp(28px, 9vw, 48px);
   font-weight: 1000;
   padding: 18px 8px;
   border-radius: 16px;
@@ -153,14 +139,10 @@ body {
   cursor: pointer;
   user-select: none;
 }
+.choiceBtn:active { transform: scale(0.98); }
 
-.choiceBtn:active {
-  transform: scale(0.98);
-}
-
-/* 次へ */
+/* 次へ（下に固定、でも中央寄せを壊さない） */
 .next {
-  margin-top: auto;
   font-size: 26px;
   font-weight: 1000;
   padding: 16px 12px;
@@ -170,34 +152,17 @@ body {
   color: #fff;
   cursor: pointer;
 }
+.next:active { transform: scale(0.99); }
 
-.next:active {
-  transform: scale(0.99);
-}
-
-/* ======================
-   Step0用：完全センター
-====================== */
-.centerMode {
+/* Step0用：もっと中央に寄せたい場合の微調整 */
+.centerMode .content {
   justify-content: center;
 }
 
 .centerMode .next {
-  margin-top: 24px;
+  margin-top: 10px;
 }
 
-/* ======================
-   結果画面
-====================== */
-.resultTitle {
-  font-size: 40px;
-  font-weight: 1000;
-  text-align: center;
-}
-
-.resultScore {
-  font-size: 26px;
-  font-weight: 900;
-  text-align: center;
-  opacity: 0.85;
-}
+/* RESULT */
+.resultTitle { font-size: 40px; font-weight: 1000; text-align: center; }
+.resultScore { font-size: 26px; font-weight: 900; text-align: center; opacity: 0.85; }
