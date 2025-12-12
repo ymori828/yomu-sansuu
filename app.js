@@ -1,4 +1,3 @@
-// ===== ひらがな辞書（0〜18） =====
 const YOMI = {
   0:"ぜろ", 1:"いち", 2:"に", 3:"さん", 4:"よん", 5:"ご",
   6:"ろく", 7:"なな", 8:"はち", 9:"きゅう", 10:"じゅう",
@@ -7,20 +6,19 @@ const YOMI = {
 };
 
 const TOTAL = 10;
-const CARRY = false; // MVPは繰り上がりOFF
+const CARRY = false;
 
-// ===== 状態 =====
-let screen = "START"; // "START" | "QUIZ" | "RESULT"
+let screen = "START";
 let qIndex = 0;
 let correctCount = 0;
 
-let step = 0;         // 0,1,2,3,"H","4a","4b"
+let step = 0; // 0,1,2,3,"H","4a","4b"
 let a = 1, b = 1, ans = 2;
 let choices = [];
 let mistakeCount = 0;
 let lastWrong = null;
 
-// ===== DOM =====
+// DOM
 const elProgress = document.getElementById("progress");
 
 const elStartCard = document.getElementById("startCard");
@@ -38,10 +36,8 @@ const elResultCard  = document.getElementById("resultCard");
 const elResultScore = document.getElementById("resultScore");
 const elRestartBtn  = document.getElementById("restartBtn");
 
-// ===== ユーティリティ =====
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+// utils
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = randInt(0, i);
@@ -50,36 +46,22 @@ function shuffle(arr) {
   return arr;
 }
 
-// 「枠に収まる最大フォント」をざっくり確実にする（式/数字の自動最大化）
-function fitTextToBox(el, { minPx = 20, maxPx = 220, padPx = 6 } = {}) {
-  // display:none のときは測れないので回避
+// 文字を枠に収めつつ最大化（横幅ベース）
+function fitTextToBox(el, { minPx = 24, maxPx = 520, padPx = 12 } = {}) {
   const boxW = el.clientWidth;
-  const boxH = el.clientHeight || 0;
   if (!boxW) return;
-
-  // 収めたい最大幅：親カードに対して
   const targetW = Math.max(10, boxW - padPx);
 
-  // 一旦 max を入れてから縮める（2分探索）
-  let lo = minPx, hi = maxPx;
-
-  // 計測用に改変（後で戻す必要なし）
   el.style.whiteSpace = "nowrap";
   el.style.overflow = "hidden";
 
+  let lo = minPx, hi = maxPx;
   while (lo <= hi) {
     const mid = Math.floor((lo + hi) / 2);
     el.style.fontSize = `${mid}px`;
-
-    // scrollWidth が targetW を超えないか確認
-    if (el.scrollWidth <= targetW) {
-      lo = mid + 1; // もっと大きく
-    } else {
-      hi = mid - 1; // 大きすぎ
-    }
+    if (el.scrollWidth <= targetW) lo = mid + 1;
+    else hi = mid - 1;
   }
-
-  // hi が「収まる最大」
   el.style.fontSize = `${Math.max(minPx, hi)}px`;
 }
 
@@ -95,12 +77,10 @@ function makeQuestion() {
     break;
   }
 
-  // 通常の3択（重複なし）
   const set = new Set([ans]);
   while (set.size < 3) {
     const delta = [ -2, -1, 1, 2, 3, -3 ][randInt(0, 5)];
-    let w = ans + delta;
-    w = Math.max(0, Math.min(18, w));
+    let w = Math.max(0, Math.min(18, ans + delta));
     if (w === ans) continue;
     set.add(w);
   }
@@ -119,27 +99,6 @@ function showChoices(list) {
   });
 }
 
-function setUI({ equation, reading, messageHTML, showNext, showChoiceButtons, showMaru, centerMode }) {
-  elEquation.textContent = equation ?? "";
-  elReading.textContent = reading ?? "";
-  elMessage.innerHTML = messageHTML ?? "";
-
-  elNextBtn.style.display = showNext ? "block" : "none";
-  elChoices.style.display = showChoiceButtons ? "grid" : "none";
-
-  if (showMaru) elMaru.classList.remove("hidden");
-  else elMaru.classList.add("hidden");
-
-  if (centerMode) elQuizCard.classList.add("centerMode");
-  else elQuizCard.classList.remove("centerMode");
-
-  // 表示のたびに「できるだけ大きく」調整（UI反映後に実行）
-  // requestAnimationFrameでレイアウト確定後に測る
-  requestAnimationFrame(() => {
-    fitTextToBox(elEquation, { minPx: 28, maxPx: centerMode ? 260 : 180, padPx: 12 });
-  });
-}
-
 function updateProgress() {
   elProgress.textContent = (screen === "QUIZ") ? `${qIndex + 1}/${TOTAL}` : "";
 }
@@ -152,8 +111,29 @@ function showScreen(next) {
   updateProgress();
 }
 
+function setUI({ equation, reading, messageHTML, showNext, showChoiceButtons, showMaru, centerMode, maxFont }) {
+  elEquation.textContent = equation ?? "";
+  elReading.textContent = reading ?? "";
+  elMessage.innerHTML = messageHTML ?? "";
+
+  elNextBtn.style.display = showNext ? "block" : "none";
+  elChoices.style.display = showChoiceButtons ? "grid" : "none";
+
+  elMaru.classList.toggle("hidden", !showMaru);
+
+  elQuizCard.classList.toggle("centerMode", !!centerMode);
+
+  requestAnimationFrame(() => {
+    fitTextToBox(elEquation, { minPx: 28, maxPx: maxFont ?? 520, padPx: 12 });
+  });
+}
+
 function renderQuiz() {
   updateProgress();
+
+  // ★式は「全角記号・スペース無し」で横幅節約 → 大きくなりやすい
+  const plus = "＋";
+  const eq = "＝";
 
   if (step === 0) {
     setUI({
@@ -163,46 +143,50 @@ function renderQuiz() {
       showNext: true,
       showChoiceButtons: false,
       showMaru: false,
-      centerMode: true,     // ← Step0は縦横センター
+      centerMode: true,
+      maxFont: 900, // 単独数字はより大きく
     });
     return;
   }
 
   if (step === 1) {
     setUI({
-      equation: `${a} +`,
+      equation: `${a}${plus}`,
       reading: `${YOMI[a]}　たす`,
       messageHTML: "",
       showNext: true,
       showChoiceButtons: false,
       showMaru: false,
       centerMode: false,
+      maxFont: 520,
     });
     return;
   }
 
   if (step === 2) {
     setUI({
-      equation: `${a} + ${b}`,
+      equation: `${a}${plus}${b}`,
       reading: `${YOMI[a]}　たす　${YOMI[b]}`,
       messageHTML: "",
       showNext: true,
       showChoiceButtons: false,
       showMaru: false,
       centerMode: false,
+      maxFont: 520,
     });
     return;
   }
 
   if (step === 3) {
     setUI({
-      equation: `${a} + ${b} = ?`,
+      equation: `${a}${plus}${b}${eq}？`,
       reading: `${YOMI[a]}　たす　${YOMI[b]}　は？`,
       messageHTML: "",
       showNext: false,
       showChoiceButtons: true,
       showMaru: false,
       centerMode: false,
+      maxFont: 520,
     });
     showChoices(choices);
     return;
@@ -212,32 +196,32 @@ function renderQuiz() {
     const msg = `ほんと？<small>やっぱり・・</small>`;
 
     if (mistakeCount >= 2) {
-      // 2回目以降：全部正解（オチ）※表示文言は同じ
       setUI({
-        equation: `${a} + ${b} = ?`,
+        equation: `${a}${plus}${b}${eq}？`,
         reading: `${YOMI[a]}　たす　${YOMI[b]}　は？`,
         messageHTML: msg,
         showNext: false,
         showChoiceButtons: true,
         showMaru: false,
         centerMode: false,
+        maxFont: 520,
       });
       showChoices([ans, ans, ans]);
       return;
     }
 
-    // 1回目：正解2つ＋ハズレ1つ
     let wrong = lastWrong ?? Math.max(0, Math.min(18, ans + 1));
     if (wrong === ans) wrong = Math.max(0, ans - 1);
 
     setUI({
-      equation: `${a} + ${b} = ?`,
+      equation: `${a}${plus}${b}${eq}？`,
       reading: `${YOMI[a]}　たす　${YOMI[b]}　は？`,
       messageHTML: msg,
       showNext: false,
       showChoiceButtons: true,
       showMaru: false,
       centerMode: false,
+      maxFont: 520,
     });
     showChoices(shuffle([ans, ans, wrong]));
     return;
@@ -250,27 +234,29 @@ function renderQuiz() {
       messageHTML: "",
       showNext: true,
       showChoiceButtons: false,
-      showMaru: true,     // ← 〇を表示（赤・大）
+      showMaru: true,
       centerMode: false,
+      maxFont: 900,
     });
     return;
   }
 
   if (step === "4b") {
     setUI({
-      equation: `${a} + ${b} = ${ans}`,
+      equation: `${a}${plus}${b}${eq}${ans}`,
       reading: `${YOMI[a]}　たす　${YOMI[b]}　は　${YOMI[ans]}`,
       messageHTML: "",
       showNext: true,
       showChoiceButtons: false,
       showMaru: false,
       centerMode: false,
+      maxFont: 520,
     });
     return;
   }
 }
 
-// ===== 操作 =====
+// actions
 function startGame() {
   qIndex = 0;
   correctCount = 0;
@@ -281,8 +267,7 @@ function startGame() {
 }
 
 function onChoose(n) {
-  // Step3 / H で押された
-  const isAutoCorrect = (step === "H" && mistakeCount >= 2); // オチ：全部正解
+  const isAutoCorrect = (step === "H" && mistakeCount >= 2);
   const isCorrect = isAutoCorrect || (n === ans);
 
   if (isCorrect) {
@@ -292,7 +277,6 @@ function onChoose(n) {
     return;
   }
 
-  // 不正解
   lastWrong = n;
   mistakeCount += 1;
   step = "H";
@@ -314,34 +298,27 @@ function nextStep() {
 function goNextQuestion() {
   qIndex += 1;
   if (qIndex >= TOTAL) {
-    showResult();
+    showScreen("RESULT");
+    elResultScore.textContent = `${TOTAL}もんちゅう ${correctCount}もん せいかい`;
     return;
   }
   makeQuestion();
   step = 0;
 }
 
-function showResult() {
-  showScreen("RESULT");
-  elResultScore.textContent = `${TOTAL}もんちゅう ${correctCount}もん せいかい`;
-}
-
 function restart() {
   showScreen("START");
 }
 
-// 画面サイズが変わったら、表示中の式/数字を再フィット
 window.addEventListener("resize", () => {
-  if (screen === "QUIZ") {
-    requestAnimationFrame(() => {
-      fitTextToBox(elEquation, { minPx: 28, maxPx: elQuizCard.classList.contains("centerMode") ? 260 : 180, padPx: 12 });
-    });
-  }
+  if (screen === "QUIZ") renderQuiz();
 });
 
-// ===== 初期化 =====
+// init
 elStartBtn.addEventListener("click", startGame);
 elNextBtn.addEventListener("click", nextStep);
 elRestartBtn.addEventListener("click", restart);
 
 showScreen("START");
+
+
