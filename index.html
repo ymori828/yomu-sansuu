@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>よむさんすう</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="title">よむさんすう</div>
+      <div class="progress" id="progress"></div>
+    </header>
+
+    <!-- START -->
+    <section class="card" id="startCard">
+      <div class="startTitle">よむさんすう</div>
+      <button class="startBtn" id="startBtn" type="button">すたーと</button>
+    </section>
+
+    <!-- QUIZ -->
+    <section class="card hidden" id="quizCard">
+      <div class="equation" id="equation"></div>
+
+      <!-- 正解の〇（Step4aだけ表示） -->
+      <div class="maru hidden" id="maru">〇</div>
+
+      <div class="reading" id="reading"></div>
+      <div class="message" id="message"></div>
+
+      <div class="choices" id="choices"></div>
+      <button class="next" id="nextBtn" type="button">つぎ</button>
+    </section>
+
+    <!-- RESULT -->
+    <section class="card hidden" id="resultCard">
+      <div class="resultTitle">けっか</div>
+      <div class="resultScore" id="resultScore"></div>
+      <button class="next" id="restartBtn" type="button">もういちど</button>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
