@@ -21,15 +21,16 @@
 
     <!-- QUIZ -->
     <section class="card hidden" id="quizCard">
-      <div class="equation" id="equation"></div>
+      <!-- ★ここが中央寄せされる本体 -->
+      <div class="content" id="content">
+        <div class="equation" id="equation"></div>
+        <div class="maru hidden" id="maru">〇</div>
+        <div class="reading" id="reading"></div>
+        <div class="message" id="message"></div>
+        <div class="choices" id="choices"></div>
+      </div>
 
-      <!-- 正解の〇（Step4aだけ表示） -->
-      <div class="maru hidden" id="maru">〇</div>
-
-      <div class="reading" id="reading"></div>
-      <div class="message" id="message"></div>
-
-      <div class="choices" id="choices"></div>
+      <!-- ★下に固定したい操作 -->
       <button class="next" id="nextBtn" type="button">つぎ</button>
     </section>
 
@@ -44,3 +45,4 @@
   <script src="app.js"></script>
 </body>
 </html>
+
