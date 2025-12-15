@@ -111,17 +111,13 @@ function showChoices(list) {
 }
 
 /**
- * 丸を描画（24px、10列で折り返し）
+ * 丸を描画
  * mode:
  *  - "a"    : a個（青）
  *  - "ab"   : a個（青）+ b個（オレンジ）
- *  - "ans"  : ans個（緑）
- *
- * ★番号は「押した順」。同じ丸2回は無視。ステップ遷移でreset。
+ *  - "ans"  : ans個（緑）※将来用（今回は基本使いません）
  */
 function renderDots(mode) {
-  // 描画セットが切り替わったら（念のため）カウンタ維持はせずリセットしない。
-  // リセットは「ステップ遷移」で必ず行う仕様なので、ここではkeyを更新するだけ。
   currentDotsKey = `${mode}:${a}:${b}:${ans}`;
 
   elDots.innerHTML = "";
@@ -139,7 +135,6 @@ function renderDots(mode) {
     const span = document.createElement("span");
     span.className = "num";
 
-    // すでに割り当て済みなら反映
     const assigned = dotAssigned.get(dotId);
     if (assigned != null) {
       btn.classList.add("assigned");
@@ -291,6 +286,7 @@ function renderQuiz() {
     return;
   }
 
+  // ★正解表示でも「緑にしない」：青＋オレンジのまま
   if (step === "4a") {
     setUI({
       equation: `${ans}`,
@@ -301,7 +297,7 @@ function renderQuiz() {
       showMaru: true,
       centerMode: false,
       maxFont: 900,
-      dotsMode: "ans",
+      dotsMode: "ab",
     });
     return;
   }
@@ -316,13 +312,13 @@ function renderQuiz() {
       showMaru: false,
       centerMode: false,
       maxFont: 520,
-      dotsMode: "ans",
+      dotsMode: "ab",
     });
     return;
   }
 }
 
-// ===== 丸タップ：押した順に1,2,3…／同じ丸2回は無視 =====
+// 丸タップ：押した順に1,2,3…／同じ丸2回は無視
 elDots.addEventListener("click", (e) => {
   const btn = e.target.closest(".dot");
   if (!btn) return;
@@ -330,13 +326,11 @@ elDots.addEventListener("click", (e) => {
   const dotId = btn.dataset.dotId;
   if (!dotId) return;
 
-  // すでに番号があるなら無視
-  if (dotAssigned.has(dotId)) return;
+  if (dotAssigned.has(dotId)) return; // 2回目は無視
 
   dotTapCounter += 1;
   dotAssigned.set(dotId, dotTapCounter);
 
-  // 画面反映
   btn.classList.add("assigned");
   const span = btn.querySelector(".num");
   if (span) span.textContent = String(dotTapCounter);
@@ -348,7 +342,7 @@ function startGame() {
   correctCount = 0;
   makeQuestion();
   step = 0;
-  resetDotTaps();          // スタート時もクリア
+  resetDotTaps();
   showScreen("QUIZ");
   renderQuiz();
 }
@@ -359,11 +353,8 @@ function onChoose(n) {
 
   if (isCorrect) {
     correctCount += 1;
-
-    // ステップ遷移（Step4aへ）＝自動リセット
     resetDotTaps();
     step = "4a";
-
     renderQuiz();
     return;
   }
@@ -371,18 +362,15 @@ function onChoose(n) {
   lastWrong = n;
   mistakeCount += 1;
 
-  // ステップ遷移（Hへ）＝自動リセット
   resetDotTaps();
   step = "H";
-
   renderQuiz();
 }
 
 function nextStep() {
   if (screen !== "QUIZ") return;
 
-  // ステップが変わるたびに自動リセット（仕様）
-  resetDotTaps();
+  resetDotTaps(); // ステップ遷移ごとに自動リセット
 
   if (step === 0) step = 1;
   else if (step === 1) step = 2;
@@ -402,7 +390,6 @@ function goNextQuestion() {
   }
   makeQuestion();
   step = 0;
-  // 問題が変わる＝自動リセット
   resetDotTaps();
 }
 
@@ -410,7 +397,7 @@ function restart() {
   showScreen("START");
 }
 
-// resizeでは「丸の番号が消えない」ように、renderQuizしない（文字だけフィットし直す）
+// resizeでは丸の番号を消さない（文字だけ調整）
 window.addEventListener("resize", () => {
   if (screen !== "QUIZ") return;
   requestAnimationFrame(() => {

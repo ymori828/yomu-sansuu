@@ -89,24 +89,25 @@ body { margin: 0; background: #f6f6f6; }
   font-weight: 800;
 }
 
-/* 丸エリア */
+/* ★ 丸エリア：横幅いっぱい＋5こで折り返し */
 .dotsWrap{
   display: flex;
   justify-content: center;
 }
 .dots{
-  width: min(420px, 100%);
+  width: 100%;
   display: grid;
-  grid-template-columns: repeat(10, 24px); /* 10個で折り返し */
-  gap: 6px;
-  justify-content: center;
-  padding: 6px 0;
+  grid-template-columns: repeat(5, 1fr); /* ★5列 */
+  gap: 12px;                              /* ★押しやすく */
+  justify-items: center;                  /* 各セルの中央に丸 */
+  align-items: center;
+  padding: 6px 0 2px;
 }
 
-/* 丸（タップできる） */
+/* 丸（サイズは端末幅で自動調整：32〜44px） */
 .dot{
-  width: 24px;
-  height: 24px;
+  width: clamp(32px, 12vw, 44px);
+  height: clamp(32px, 12vw, 44px);
   border-radius: 999px;
   border: none;
   padding: 0;
@@ -118,7 +119,7 @@ body { margin: 0; background: #f6f6f6; }
 /* 色 */
 .dot.a { background: #2b6cff; }      /* 青 */
 .dot.b { background: #ff8a00; }      /* オレンジ */
-.dot.ans { background: #20b26b; }    /* 緑 */
+.dot.ans { background: #20b26b; }    /* 緑（今回は基本使いませんが残してOK） */
 
 /* 中の数字（初期は見えない） */
 .dot .num{
