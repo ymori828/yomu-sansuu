@@ -18,6 +18,16 @@ let choices = [];
 let mistakeCount = 0;
 let lastWrong = null;
 
+// ===== 丸タップ番号（ステップ内で通し） =====
+let dotTapCounter = 0;                 // 0→1→2→...
+let dotAssigned = new Map();           // dotId -> assignedNumber
+let currentDotsKey = "";               // 描画セット識別（a/ab/ans と個数）
+
+function resetDotTaps() {
+  dotTapCounter = 0;
+  dotAssigned.clear();
+}
+
 // DOM
 const elProgress = document.getElementById("progress");
 
@@ -29,6 +39,7 @@ const elEquation  = document.getElementById("equation");
 const elMaru      = document.getElementById("maru");
 const elReading   = document.getElementById("reading");
 const elMessage   = document.getElementById("message");
+const elDots      = document.getElementById("dots");
 const elChoices   = document.getElementById("choices");
 const elNextBtn   = document.getElementById("nextBtn");
 
@@ -99,6 +110,63 @@ function showChoices(list) {
   });
 }
 
+/**
+ * 丸を描画（24px、10列で折り返し）
+ * mode:
+ *  - "a"    : a個（青）
+ *  - "ab"   : a個（青）+ b個（オレンジ）
+ *  - "ans"  : ans個（緑）
+ *
+ * ★番号は「押した順」。同じ丸2回は無視。ステップ遷移でreset。
+ */
+function renderDots(mode) {
+  // 描画セットが切り替わったら（念のため）カウンタ維持はせずリセットしない。
+  // リセットは「ステップ遷移」で必ず行う仕様なので、ここではkeyを更新するだけ。
+  currentDotsKey = `${mode}:${a}:${b}:${ans}`;
+
+  elDots.innerHTML = "";
+
+  let dotIndex = 0; // 0..n-1 を dotId に使う（描画セット内ユニーク）
+
+  const makeDot = (groupClass) => {
+    const dotId = `${currentDotsKey}:${dotIndex++}`;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `dot ${groupClass}`;
+    btn.dataset.dotId = dotId;
+
+    const span = document.createElement("span");
+    span.className = "num";
+
+    // すでに割り当て済みなら反映
+    const assigned = dotAssigned.get(dotId);
+    if (assigned != null) {
+      btn.classList.add("assigned");
+      span.textContent = String(assigned);
+    } else {
+      span.textContent = "";
+    }
+
+    btn.appendChild(span);
+    elDots.appendChild(btn);
+  };
+
+  if (mode === "a") {
+    for (let i = 0; i < a; i++) makeDot("a");
+    return;
+  }
+
+  if (mode === "ab") {
+    for (let i = 0; i < a; i++) makeDot("a");
+    for (let i = 0; i < b; i++) makeDot("b");
+    return;
+  }
+
+  // "ans"
+  for (let i = 0; i < ans; i++) makeDot("ans");
+}
+
 function updateProgress() {
   elProgress.textContent = (screen === "QUIZ") ? `${qIndex + 1}/${TOTAL}` : "";
 }
@@ -111,7 +179,7 @@ function showScreen(next) {
   updateProgress();
 }
 
-function setUI({ equation, reading, messageHTML, showNext, showChoiceButtons, showMaru, centerMode, maxFont }) {
+function setUI({ equation, reading, messageHTML, showNext, showChoiceButtons, showMaru, centerMode, maxFont, dotsMode }) {
   elEquation.textContent = equation ?? "";
   elReading.textContent = reading ?? "";
   elMessage.innerHTML = messageHTML ?? "";
@@ -120,8 +188,9 @@ function setUI({ equation, reading, messageHTML, showNext, showChoiceButtons, sh
   elChoices.style.display = showChoiceButtons ? "grid" : "none";
 
   elMaru.classList.toggle("hidden", !showMaru);
-
   elQuizCard.classList.toggle("centerMode", !!centerMode);
+
+  renderDots(dotsMode);
 
   requestAnimationFrame(() => {
     fitTextToBox(elEquation, { minPx: 28, maxPx: maxFont ?? 520, padPx: 12 });
@@ -131,7 +200,6 @@ function setUI({ equation, reading, messageHTML, showNext, showChoiceButtons, sh
 function renderQuiz() {
   updateProgress();
 
-  // ★式は「全角記号・スペース無し」で横幅節約 → 大きくなりやすい
   const plus = "＋";
   const eq = "＝";
 
@@ -144,7 +212,8 @@ function renderQuiz() {
       showChoiceButtons: false,
       showMaru: false,
       centerMode: true,
-      maxFont: 900, // 単独数字はより大きく
+      maxFont: 900,
+      dotsMode: "a",
     });
     return;
   }
@@ -159,6 +228,7 @@ function renderQuiz() {
       showMaru: false,
       centerMode: false,
       maxFont: 520,
+      dotsMode: "a",
     });
     return;
   }
@@ -173,6 +243,7 @@ function renderQuiz() {
       showMaru: false,
       centerMode: false,
       maxFont: 520,
+      dotsMode: "ab",
     });
     return;
   }
@@ -187,6 +258,7 @@ function renderQuiz() {
       showMaru: false,
       centerMode: false,
       maxFont: 520,
+      dotsMode: "ab",
     });
     showChoices(choices);
     return;
@@ -194,24 +266,6 @@ function renderQuiz() {
 
   if (step === "H") {
     const msg = `ほんと？<small>やっぱり・・</small>`;
-
-    if (mistakeCount >= 2) {
-      setUI({
-        equation: `${a}${plus}${b}${eq}？`,
-        reading: `${YOMI[a]}　たす　${YOMI[b]}　は？`,
-        messageHTML: msg,
-        showNext: false,
-        showChoiceButtons: true,
-        showMaru: false,
-        centerMode: false,
-        maxFont: 520,
-      });
-      showChoices([ans, ans, ans]);
-      return;
-    }
-
-    let wrong = lastWrong ?? Math.max(0, Math.min(18, ans + 1));
-    if (wrong === ans) wrong = Math.max(0, ans - 1);
 
     setUI({
       equation: `${a}${plus}${b}${eq}？`,
@@ -222,7 +276,17 @@ function renderQuiz() {
       showMaru: false,
       centerMode: false,
       maxFont: 520,
+      dotsMode: "ab",
     });
+
+    if (mistakeCount >= 2) {
+      showChoices([ans, ans, ans]);
+      return;
+    }
+
+    let wrong = lastWrong ?? Math.max(0, Math.min(18, ans + 1));
+    if (wrong === ans) wrong = Math.max(0, ans - 1);
+
     showChoices(shuffle([ans, ans, wrong]));
     return;
   }
@@ -237,6 +301,7 @@ function renderQuiz() {
       showMaru: true,
       centerMode: false,
       maxFont: 900,
+      dotsMode: "ans",
     });
     return;
   }
@@ -251,10 +316,31 @@ function renderQuiz() {
       showMaru: false,
       centerMode: false,
       maxFont: 520,
+      dotsMode: "ans",
     });
     return;
   }
 }
+
+// ===== 丸タップ：押した順に1,2,3…／同じ丸2回は無視 =====
+elDots.addEventListener("click", (e) => {
+  const btn = e.target.closest(".dot");
+  if (!btn) return;
+
+  const dotId = btn.dataset.dotId;
+  if (!dotId) return;
+
+  // すでに番号があるなら無視
+  if (dotAssigned.has(dotId)) return;
+
+  dotTapCounter += 1;
+  dotAssigned.set(dotId, dotTapCounter);
+
+  // 画面反映
+  btn.classList.add("assigned");
+  const span = btn.querySelector(".num");
+  if (span) span.textContent = String(dotTapCounter);
+});
 
 // actions
 function startGame() {
@@ -262,6 +348,7 @@ function startGame() {
   correctCount = 0;
   makeQuestion();
   step = 0;
+  resetDotTaps();          // スタート時もクリア
   showScreen("QUIZ");
   renderQuiz();
 }
@@ -272,19 +359,30 @@ function onChoose(n) {
 
   if (isCorrect) {
     correctCount += 1;
+
+    // ステップ遷移（Step4aへ）＝自動リセット
+    resetDotTaps();
     step = "4a";
+
     renderQuiz();
     return;
   }
 
   lastWrong = n;
   mistakeCount += 1;
+
+  // ステップ遷移（Hへ）＝自動リセット
+  resetDotTaps();
   step = "H";
+
   renderQuiz();
 }
 
 function nextStep() {
   if (screen !== "QUIZ") return;
+
+  // ステップが変わるたびに自動リセット（仕様）
+  resetDotTaps();
 
   if (step === 0) step = 1;
   else if (step === 1) step = 2;
@@ -304,14 +402,20 @@ function goNextQuestion() {
   }
   makeQuestion();
   step = 0;
+  // 問題が変わる＝自動リセット
+  resetDotTaps();
 }
 
 function restart() {
   showScreen("START");
 }
 
+// resizeでは「丸の番号が消えない」ように、renderQuizしない（文字だけフィットし直す）
 window.addEventListener("resize", () => {
-  if (screen === "QUIZ") renderQuiz();
+  if (screen !== "QUIZ") return;
+  requestAnimationFrame(() => {
+    fitTextToBox(elEquation, { minPx: 28, maxPx: elQuizCard.classList.contains("centerMode") ? 900 : 520, padPx: 12 });
+  });
 });
 
 // init
@@ -320,6 +424,3 @@ elNextBtn.addEventListener("click", nextStep);
 elRestartBtn.addEventListener("click", restart);
 
 showScreen("START");
-
-
-

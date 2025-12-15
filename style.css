@@ -1,40 +1,14 @@
-:root {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
-}
-
+:root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif; }
 * { box-sizing: border-box; }
+body { margin: 0; background: #f6f6f6; }
 
-body {
-  margin: 0;
-  background: #f6f6f6;
-}
+.app { max-width: 520px; margin: 0 auto; padding: 16px; }
 
-/* スマホ幅想定 */
-.app {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 16px;
-}
-
-/* 上部バー */
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 8px 4px 12px;
-}
-
+.topbar { display: flex; align-items: center; justify-content: space-between; margin: 8px 4px 12px; }
 .title { font-weight: 900; font-size: 20px; }
+.progress { font-weight: 800; opacity: .75; min-width: 64px; text-align: right; }
 
-.progress {
-  font-weight: 800;
-  opacity: 0.75;
-  min-width: 64px;
-  text-align: right;
-}
-
-/* 共通カード */
-.card {
+.card{
   background: #fff;
   border-radius: 18px;
   padding: 18px;
@@ -45,18 +19,16 @@ body {
   flex-direction: column;
   gap: 14px;
 }
-
-.hidden { display: none; }
+.hidden{ display:none; }
 
 /* START */
-.startTitle {
+.startTitle{
   font-weight: 900;
   font-size: 42px;
-  text-align: center;
+  text-align:center;
   margin-top: 10vh;
 }
-
-.startBtn {
+.startBtn{
   margin-top: auto;
   font-size: 34px;
   font-weight: 900;
@@ -67,38 +39,34 @@ body {
   color: #fff;
   cursor: pointer;
 }
-.startBtn:active { transform: scale(0.99); }
+.startBtn:active{ transform: scale(0.99); }
 
-/* QUIZ：中央に寄せる本体 */
-.content {
+/* QUIZ content 中央寄せ */
+.content{
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;  /* ★常に縦中央 */
+  justify-content: center;
   gap: 14px;
 }
 
-/* 数字・式（JSで最終的に最大化） */
-.equation {
+.equation{
   font-weight: 1000;
   text-align: center;
   letter-spacing: 1px;
   line-height: 1.05;
-
-  font-size: clamp(56px, 18vw, 180px); /* ★初期値も強め */
+  font-size: clamp(56px, 18vw, 180px);
   white-space: nowrap;
   overflow: hidden;
 }
 
-/* 読み */
-.reading {
+.reading{
   font-size: clamp(24px, 7.5vw, 44px);
   font-weight: 900;
   text-align: center;
 }
 
-/* 正解の〇（赤く大きく） */
-.maru {
+.maru{
   text-align: center;
   font-weight: 1000;
   font-size: clamp(80px, 22vw, 200px);
@@ -107,29 +75,74 @@ body {
   margin-top: -6px;
 }
 
-/* メッセージ */
-.message {
+.message{
   text-align: center;
   font-weight: 900;
   font-size: clamp(22px, 7vw, 36px);
   min-height: 40px;
 }
-.message small {
-  display: block;
+.message small{
+  display:block;
   font-size: 16px;
-  opacity: 0.6;
+  opacity: .6;
   margin-top: 4px;
   font-weight: 800;
 }
 
-/* 3択 */
-.choices {
+/* 丸エリア */
+.dotsWrap{
+  display: flex;
+  justify-content: center;
+}
+.dots{
+  width: min(420px, 100%);
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(10, 24px); /* 10個で折り返し */
+  gap: 6px;
+  justify-content: center;
+  padding: 6px 0;
 }
 
-.choiceBtn {
+/* 丸（タップできる） */
+.dot{
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+/* 色 */
+.dot.a { background: #2b6cff; }      /* 青 */
+.dot.b { background: #ff8a00; }      /* オレンジ */
+.dot.ans { background: #20b26b; }    /* 緑 */
+
+/* 中の数字（初期は見えない） */
+.dot .num{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 1000;
+  font-size: 14px;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity .12s ease, transform .12s ease;
+}
+
+/* 番号が割り当てられたら表示 */
+.dot.assigned .num{
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* 3択 */
+.choices{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.choiceBtn{
   font-size: clamp(28px, 9vw, 48px);
   font-weight: 1000;
   padding: 18px 8px;
@@ -139,10 +152,10 @@ body {
   cursor: pointer;
   user-select: none;
 }
-.choiceBtn:active { transform: scale(0.98); }
+.choiceBtn:active{ transform: scale(0.98); }
 
-/* 次へ（下に固定、でも中央寄せを壊さない） */
-.next {
+/* 次へ */
+.next{
   font-size: 26px;
   font-weight: 1000;
   padding: 16px 12px;
@@ -152,18 +165,13 @@ body {
   color: #fff;
   cursor: pointer;
 }
-.next:active { transform: scale(0.99); }
+.next:active{ transform: scale(0.99); }
 
-/* Step0用：もっと中央に寄せたい場合の微調整 */
-.centerMode .content {
-  justify-content: center;
-}
-
-.centerMode .next {
-  margin-top: 10px;
-}
+/* Step0微調整 */
+.centerMode .content{ justify-content: center; }
+.centerMode .next{ margin-top: 10px; }
 
 /* RESULT */
-.resultTitle { font-size: 40px; font-weight: 1000; text-align: center; }
-.resultScore { font-size: 26px; font-weight: 900; text-align: center; opacity: 0.85; }
+.resultTitle{ font-size: 40px; font-weight: 1000; text-align: center; }
+.resultScore{ font-size: 26px; font-weight: 900; text-align: center; opacity: .85; }
 
